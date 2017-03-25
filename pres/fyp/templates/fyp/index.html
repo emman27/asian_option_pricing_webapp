@@ -1,0 +1,167 @@
+<head>
+  <title>Asian Option Pricing</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap -->
+  <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/css/roboto.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/4.0.2/bootstrap-material-design.css" integrity="sha256-c9OCpXgYepI8baar2x81YigAWryLIoQ2k0/7cCb1JAg=" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/css/material-fullpalette.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/css/ripples.min.css">
+  <style type="text/css">
+    .loader {
+      border: 16px solid #f3f3f3; /* Light grey */
+      border-top: 16px solid #3498db; /* Blue */
+      border-radius: 50%;
+      width: 120px;
+      height: 120px;
+      animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body style="padding-top: 60px;">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12">
+        <h1>Asian Option Pricing through Finite Difference Schemes</h1>
+      </div>
+    </div>
+    <br>
+    <div class="well">
+      <div class="row">
+        <div class="col-xs-12">
+          <form>
+            <div class="form-group details-control">
+              <label>Option Type</label>
+              <div class="radio" id="fixed">
+                <label>
+                  <input type="radio" name="strike-type" value="fixed">
+                  <span class="circle"></span>
+                  <span class="check"></span>
+                  Fixed Strike
+                </label>
+              </div>
+
+              <div class="radio" id="floating">
+                <label>
+                  <input type="radio" name="strike-type" value="floating">
+                  <span class="circle"></span>
+                  <span class="check"></span>
+                  Floating Strike
+                </label>
+              </div>
+            </div>
+
+            <div id="details" style="display: none;">
+              <div class="form-group label-floating is-empty">
+                <label for="inital-price" class="control-label">Initial Price</label>
+                <input type="" class="form-control" id="initial-price" placeholder="100" name="s0" />
+              </div>
+
+              <div id="fixed-only">
+                <div class="form-group label-floating is-empty">
+                  <label for="strike" class="control-label">Strike</label>
+                  <input type="" class="form-control" id="initial-price" placeholder="100" name="K" />
+                </div>
+              </div>
+
+              <div class="form-group label-floating is-empty">
+                <label for="inital-price" class="control-label">Time to expiry (years)</label>
+                <input type="" class="form-control" id="initial-price" placeholder="1" name="T" />
+              </div>
+
+              <div id="floating-only">
+                <div class="form-group label-floating is-empty">
+                  <label for="inital-price" class="control-label">Existing Average</label>
+                  <input type="" class="form-control" id="initial-price" placeholder="100" name="A" />
+                </div>
+
+                <div class="form-group label-floating is-empty">
+                  <label for="inital-price" class="control-label">Length of time Averaging has been in place</label>
+                  <input type="" class="form-control" id="initial-price" placeholder="0" name="t0" />
+                </div>
+              </div>
+
+
+              <div class="form-group label-floating is-empty">
+                <label for="inital-price" class="control-label">Risk-free rate</label>
+                <input type="" class="form-control" id="initial-price" placeholder="0.09" name="r" />
+              </div>
+
+              <div class="form-group label-floating is-empty">
+                <label for="inital-price" class="control-label">Volatility</label>
+                <input type="" class="form-control" id="initial-price" placeholder="0.3" name="sigma" />
+              </div>
+
+              <button class="btn btn-primary" id="submit">Get Price</button>
+            </div>
+          </form>
+
+          <div id="placeholder" style="display: none;">
+            <div class="loader"></div>
+          </div>
+          <div id="results"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script
+  src="https://code.jquery.com/jquery-3.1.1.min.js"
+  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  crossorigin="anonymous"></script>
+  <script
+  src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+  integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+  crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/js/material.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/js/ripples.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <script type="text/javascript">
+    $('#fixed').click(function(){
+      $('#floating-only').hide('slow');
+      $('#fixed-only').show('slow');
+      $("input[name='strike-type']").val('fixed');
+    })
+
+    $('#floating').click(function(){
+      $('#floating-only').show('slow');
+      $('#fixed-only').hide('slow');
+      $("input[name='strike-type']").val('floating');
+    })
+
+    $('.details-control').click(function(){
+      $('#details').show('slow');
+    });
+
+    $('#submit').click(function(e){
+      e.preventDefault();
+      $('#placeholder').show();
+      $('#results').html('');
+      $.ajax({
+        method: 'GET',
+        url: '/fyp/price',
+        data: {
+          'type': $("input[name='strike-type']").val(),
+          's0': $("input[name='s0']").val(),
+          'strike': $("input[name='K']").val(),
+          'T': $("input[name='T']").val(),
+          'avr': $("input[name='A']").val(),
+          't0': $("input[name='t0']").val(),
+          'r': $("input[name='r']").val(),
+          'sigma': $("input[name='sigma']").val()
+        },
+        success: function(response){
+          $('#placeholder').hide();
+          $('#results').html("Your option price: " + response['price']);
+        }
+      })
+    })
+  </script>
+</body>
